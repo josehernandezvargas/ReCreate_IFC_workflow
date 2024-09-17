@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFC Element Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- IFC Preview Area -->
+    <div class="preview-container">
+        <div id="preview" class="preview">
+            <h2>IFC Model Preview</h2>
+        </div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <h3>IFC Element Editor Panel</h3>
+        <form id="ifcForm">
+            
+            <!-- Type Selector -->
+            <div class="section">
+                <h4>Select IFC Element Type</h4>
+                <select id="elementType" name="elementType">
+                    <option value="">Select Type</option>
+                    <option value="IfcWall">Wall</option>
+                    <option value="IfcSlab">Slab</option>
+                    <option value="IfcBeam">Beam</option>
+                    <option value="IfcColumn">Column</option>
+                </select>
+            </div>
+
+            <!-- Wall Fields (Initially Hidden) -->
+            <div id="wallFields" class="section" style="display: none;">
+                <h4>Wall Properties</h4>
+                
+                <label for="Wall_ID">Wall ID:</label>
+                <input type="text" id="Wall_ID" name="Wall_ID" placeholder="Enter Wall ID">
+
+                <label for="Wall_Type">Wall Type:</label>
+                <input type="text" id="Wall_Type" name="Wall_Type" placeholder="Enter Wall Type">
+
+                <label for="Height">Height (mm):</label>
+                <input type="number" id="Height" name="Height" placeholder="Height in mm">
+
+                <label for="Length">Length (mm):</label>
+                <input type="number" id="Length" name="Length" placeholder="Length in mm">
+
+                <label for="Thickness">Thickness (mm):</label>
+                <input type="number" id="Thickness" name="Thickness" placeholder="Thickness in mm">
+
+                <label for="Strength_Class">Strength Class:</label>
+                <input type="text" id="Strength_Class" name="Strength_Class" placeholder="Concrete Strength Class">
+
+                <label for="Has_Void">Has Voids?</label>
+                <input type="checkbox" id="Has_Void" name="Has_Void">
+
+                <!-- Dynamic Void Fields (Initially Hidden) -->
+                <div id="voidFields" style="display: none;">
+                    <h5>Void 1</h5>
+                    <label for="Void1_X">Void 1 X Position (mm):</label>
+                    <input type="number" id="Void1_X" name="Void1_X" placeholder="X Position in mm">
+                    <label for="Void1_Width">Void 1 Width (mm):</label>
+                    <input type="number" id="Void1_Width" name="Void1_Width" placeholder="Width in mm">
+                    <label for="Void1_Height">Void 1 Height (mm):</label>
+                    <input type="number" id="Void1_Height" name="Void1_Height" placeholder="Height in mm">
+                </div>
+
+            </div>
+
+            <button type="button" id="generateIfc">Generate/Update IFC</button>
+        </form>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
