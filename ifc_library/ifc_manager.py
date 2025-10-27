@@ -57,8 +57,19 @@ class IFCElement:
     #     run("geometry.assign_representation", self.ifc_manager.model, product=self.element, representation=representation)
 
     def assign_to_container(self, container):
-        # Assign element to a container
-        run("spatial.assign_container", self.ifc_manager.model, relating_structure=container, product=self.element)
+        """Assign this element to an IFC spatial container.
+
+        The `ifcopenshell.api.spatial.assign_container` usecase expects a
+        list of products.  Earlier versions accepted a single ``product``
+        keyword which causes a ``TypeError`` with newer releases.  The
+        call is therefore wrapped to always pass a list.
+        """
+        run(
+            "spatial.assign_container",
+            self.ifc_manager.model,
+            relating_structure=container,
+            products=[self.element],
+        )
 
     def add_property_set(self, property_sets):
         """
@@ -74,5 +85,44 @@ class IFCElement:
             
             # Populate the property set with properties
             run("pset.edit_pset", self.ifc_manager.model, pset=pset, properties=properties)
+
+    def add_geometry_from_coordinates(self, points, extrusion_length):
+        """Create geometry from a polyline described by ``points``.
+
+        The coordinates describe a 2D projection in one of the principal
+        planes.  The profile is automatically closed and extruded along the
+        axis orthogonal to the projection by ``extrusion_length``.
+
+        Parameters
+        ----------
+        points: iterable of tuple(float, float)
+            Sequence of 2D Cartesian coordinates defining the projection.
+        extrusion_length: float
+            Distance to extrude the profile along the remaining axis.
+        """
+        pts = list(points)
+        if not pts:
+            return
+        if pts[0] != pts[-1]:
+            pts.append(pts[0])
+
+        cartesian_points = [
+            self.ifc_manager.model.createIfcCartesianPoint([float(c) for c in p])
+            for p in pts
+        ]
+        profile = self.ifc_manager.model.createIfcPolyline(cartesian_points)
+        representation = run(
+            "geometry.add_profile_representation",
+            self.ifc_manager.model,
+            context=self.ifc_manager.body,
+            profile=profile,
+            depth=extrusion_length,
+        )
+        run(
+            "geometry.assign_representation",
+            self.ifc_manager.model,
+            product=self.element,
+            representation=representation,
+        )
 
 

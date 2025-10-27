@@ -10,6 +10,14 @@ class IFCSlab(IFCElement):
     def __init__(self, ifc_manager, name="Slab"):
         super().__init__(ifc_manager, ifc_class="IfcSlab", name=name)
 
+    def add_geometry_from_coordinates(self, points, thickness):
+        """Create slab geometry from plan view ``points``.
+
+        The coordinates define the slab outline in the XY plane and are
+        extruded by ``thickness`` along the vertical axis.
+        """
+        super().add_geometry_from_coordinates(points, thickness)
+
     def add_slab_representation(self, length, width, height, void_count=0, void_diameter=0):
         """
         Adds a geometric representation of the slab, choosing between a solid or hollow-core representation.
@@ -59,7 +67,13 @@ class IFCSlab(IFCElement):
         profile_polyline = self.create_hollow_core_profile(width, height, void_count, void_diameter)
 
         # Create and assign the profile-based representation to the slab
-        profile_representation = run("geometry.add_profile_representation", self.ifc_manager.model, context=self.ifc_manager.body, profile=profile_polyline, length=length)
+        profile_representation = run(
+            "geometry.add_profile_representation",
+            self.ifc_manager.model,
+            context=self.ifc_manager.body,
+            profile=profile_polyline,
+            depth=length,
+        )
         run("geometry.assign_representation", self.ifc_manager.model, product=self.element, representation=profile_representation)
 
     def create_hollow_core_profile(self, width, height, void_count, void_diameter):
@@ -100,10 +114,13 @@ class IFCSlab(IFCElement):
         points.append((0.0, 0.0))  # Closing the profile
 
         # Convert points to IfcCartesianPoints
-        cartesian_points = [run("geometry.add_cartesian_point", self.ifc_manager.model, coordinates=point) for point in points]
-        
+        cartesian_points = [
+            self.ifc_manager.model.createIfcCartesianPoint([float(c) for c in point])
+            for point in points
+        ]
+
         # Create the polyline representation
-        profile_polyline = run("geometry.add_polyline", self.ifc_manager.model, points=cartesian_points)
+        profile_polyline = self.ifc_manager.model.createIfcPolyline(cartesian_points)
 
         return profile_polyline
 

@@ -29,9 +29,21 @@ def create_wall_from_data(ifc_manager, wall_data):
     wall.add_wall_representation(
         length=geometry_data.get("Length", 5000.0),
         height=geometry_data.get("Height", 3000.0),
-        thickness=geometry_data.get("Thickness", 300.0),
-        voids=voids
+       thickness=geometry_data.get("Thickness", 300.0),
+       voids=voids
     )
+
+    # Demonstrate coordinate based geometry using the wall footprint
+    footprint = [
+        (0.0, 0.0),
+        (geometry_data.get("Length", 0.0), 0.0),
+        (
+            geometry_data.get("Length", 0.0),
+            geometry_data.get("Thickness", 0.0),
+        ),
+        (0.0, geometry_data.get("Thickness", 0.0)),
+    ]
+    wall.add_geometry_from_coordinates(footprint, geometry_data.get("Height", 0.0))
 
     # Add element and geometry data to the wall
     wall.add_element_data(element_data)
