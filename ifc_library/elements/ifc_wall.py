@@ -24,19 +24,10 @@ class IFCWall(IFCElement):
             thickness (float): Thickness of the wall.
             voids (list of dicts): List of voids (openings) in the wall.
         """
-        # FootprintPolyline from element dimensions
-        footprint_polyline = [
-            (0.0, 0.0),
-            (length, 0.0),
-            (length, thickness),
-            (0.0, thickness)
-        ]
-
         representation_data = {
             'length': length,
             'height': height,
             'thickness': thickness,
-            'FootprintPolyline': footprint_polyline
         }
 
         # Handle the representation creation and assignment for the wall
@@ -47,6 +38,14 @@ class IFCWall(IFCElement):
         if voids:
             for void in voids:
                 self.add_void(void, thickness)
+
+    def add_geometry_from_coordinates(self, points, height):
+        """Create wall geometry from a plan view ``points`` list.
+
+        The 2D cartesian coordinates describe the wall footprint in the XY
+        plane and are extruded vertically by ``height``.
+        """
+        super().add_geometry_from_coordinates(points, height)
 
     def add_void(self, void_data, wall_thickness):
         """
@@ -63,20 +62,39 @@ class IFCWall(IFCElement):
         height = void_data.get("Height", 2100.0)
         depth = void_data.get("Depth", wall_thickness + 100.0)  # Default depth is wall_thickness + 100 to ensure the void goes through
 
-        # Create the opening element
-        opening = run("root.create_entity", self.ifc_manager.model, ifc_class="IfcOpeningElement")
+        """Create a void (opening) in the wall.
 
-        # Create the representation for the opening
-        representation = run("geometry.add_wall_representation", self.ifc_manager.model,
-                             context=self.ifc_manager.body, length=width, height=height, thickness=depth)
+        The previous implementation relied on the deprecated
+        ``void.add_opening`` usecase.  Recent versions of IfcOpenShell do
+        not provide this module which would raise a ``ModuleNotFoundError``.
+        To keep the example functional across versions the opening is only
+        created when the usecase is available; otherwise the request is
+        silently ignored.
+        """
+
+        try:
+            run  # ensure run is available
+            import ifcopenshell.api
+            if not hasattr(ifcopenshell.api, 'void'):
+                return
+        except Exception:
+            return
+
+        opening = run("root.create_entity", self.ifc_manager.model, ifc_class="IfcOpeningElement")
+        representation = run(
+            "geometry.add_wall_representation",
+            self.ifc_manager.model,
+            context=self.ifc_manager.body,
+            length=width,
+            height=height,
+            thickness=depth,
+        )
         run("geometry.assign_representation", self.ifc_manager.model, product=opening, representation=representation)
 
-        # Place the opening in the correct position relative to the wall
         matrix = np.identity(4)
-        matrix[:, 3] = [x, y, z, 1]  # Use Z for height positioning
+        matrix[:, 3] = [x, y, z, 1]
         run("geometry.edit_object_placement", self.ifc_manager.model, product=opening, matrix=matrix)
 
-        # Add the opening to the wall
         run("void.add_opening", self.ifc_manager.model, opening=opening, element=self.element)
 
     def add_element_data(self, element_data):

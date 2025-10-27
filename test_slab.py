@@ -34,6 +34,18 @@ if __name__ == "__main__":
         width=slab_data['element_data']['Width'],
         height=slab_data['element_data']['Height']
     )
+
+    # Demonstrate coordinate based geometry using the slab outline
+    outline = [
+        (0.0, 0.0),
+        (slab_data['element_data']['Length'], 0.0),
+        (
+            slab_data['element_data']['Length'],
+            slab_data['element_data']['Width'],
+        ),
+        (0.0, slab_data['element_data']['Width']),
+    ]
+    slab.add_geometry_from_coordinates(outline, slab_data['element_data']['Height'])
     
     # Add element data to the slab
     slab.add_element_data(slab_data['element_data'])
